@@ -38,71 +38,68 @@ window.addEventListener("scroll", function() {
 });
 
 
-
-// Function to handle form submission
 function submitForm(event) {
-    event.preventDefault(); // Prevent default form submission behavior
+    event.preventDefault();
 
-    // Get values from the form
+    // Get form data
     const district = document.getElementById('district').value;
     const commodity = document.getElementById('commodity').value;
-    const amount = parseFloat(document.getElementById('amount').value);
-    const unit = document.querySelector('input[name="unit"]:checked').value;
-    const month = parseInt(document.getElementById('month').value);
-    const year = parseInt(document.getElementById('year').value);
+    const variety = document.getElementById('variety').value;
+    const amount = document.getElementById('amount').value;
+    const month = document.getElementById('month').value;
+    const year = document.getElementById('year').value;
 
-    // Validate inputs
-    if (!district || !commodity || isNaN(amount) || !unit || isNaN(month) || isNaN(year)) {
-        alert('Please fill in all fields correctly.');
-        return;
-    }
+    // Prepare the data to send
+    const data = {
+        district: district,
+        commodity: commodity,
+        variety: variety,
+        amount: amount,
+        month: month,
+        year: year
+    };
 
-    // Simulate price prediction (replace this with your actual logic/API call)
-    const predictedPrice = calculatePredictedPrice(commodity, district, month, year, amount, unit);
+    // Send the data to the Flask app
+    fetch('/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.error) {
+            console.error(result.error);
+            alert('Error: ' + result.error);
+            return;
+        }
 
-    // Update the results section
-    displayResults(predictedPrice, district, commodity, amount, unit, month, year);
-}
+        // Populate predicted price
+        document.getElementById('predicted-price').textContent = 
+            `Predicted price for ${commodity} in ${district} for ${month}/${year}: ₹${result.predictedPrice.toFixed(2)} per quintal`;
 
-// Function to calculate the predicted price (sample logic)
-function calculatePredictedPrice(commodity, district, month, year, amount, unit) {
-    // Mock calculation (replace with real calculation logic)
-    const basePrice = 3000; // Example base price per quintal
-    const pricePerQuintal = unit === 'kg' ? basePrice / 10 : basePrice; // Convert kg to quintal
-    const totalPrice = pricePerQuintal * (amount / (unit === 'kg' ? 1000 : 1)); // Convert amount to quintals
-    return totalPrice.toFixed(2); // Return total price as string
-}
+        // Populate nearby districts
+        const locationList = document.getElementById('location-list');
+        locationList.innerHTML = ''; // Clear previous results
+        result.nearbyDistricts.forEach(district => {
+            const li = document.createElement('li');
+            li.textContent = `${district.name} (${district.distance.toFixed(2)} km), Price: ₹${district.price.toFixed(2)} for ${amount} kg`;
+            locationList.appendChild(li);
+        });
 
-// Function to display the results
-function displayResults(predictedPrice, district, commodity, amount, unit, month, year) {
-    // Display predicted price
-    const priceResult = document.getElementById('price-result');
-    priceResult.innerHTML = `<h4>Predicted Price</h4>
-                             <p>Predicted price for ${commodity} in ${district} for ${month}/${year}: ₹${predictedPrice} per quintal</p>`;
-    
-    // Simulate nearby districts data (replace with actual data)
-    const nearbyDistricts = [
-        { name: 'Erode', distance: 30.12, variety: 'Finger', modalPrice: 2800 },
-        { name: 'Karur', distance: 60.75, variety: 'Bulb', modalPrice: 2900 },
-        { name: 'Theni', distance: 100.23, variety: 'Other', modalPrice: 2950 },
-        { name: 'Namakkal', distance: 150.98, variety: 'Finger', modalPrice: 2700 },
-    ];
+        // Show best buy month
+        document.getElementById('best-buy-month').textContent = 
+            `Best buy month for ${commodity} (${variety}) is ${result.bestBuyMonth}.`;
 
-    // Display nearby district prices
-    const locationResult = document.getElementById('location-result');
-    locationResult.innerHTML = `<h4>Nearby Districts for ${commodity}</h4>
-                                <p>${commodity} is available in the following districts near ${district}:</p>
-                                <ul>${nearbyDistricts.map(district => 
-                                    `<li>${district.name} (${district.distance} km), Variety: ${district.variety}, Modal Price: ₹${district.modalPrice} per quintal</li>`
-                                ).join('')}</ul>`;
+        // Update amount display
+        document.getElementById('amount-display').textContent = `${amount} kg`;
 
-    // Display price suggestions
-    const suggestionsResult = document.getElementById('suggestions-result');
-    suggestionsResult.innerHTML = `<h4>Price Suggestions for ${amount} ${unit}</h4>
-                                   <ul>${nearbyDistricts.map(district => 
-                                       `<li>${district.name} (Distance: ${district.distance} km), Total Price for ${amount} ${unit}: ₹${(district.modalPrice * (amount / (unit === 'kg' ? 1000 : 1))).toFixed(2)}</li>`
-                                   ).join('')}</ul>`;
-
-    // Show the results section
-    document.getElementById('results-section').classList.remove('hidden');
+        // Show results section
+        document.getElementById('results-section').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
 }
