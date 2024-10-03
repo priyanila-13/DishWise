@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dish Price Predictor</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>DishWise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="images/logo-1.png" alt="Logo" class="logo">
+            <img src="{{ url_for('static', filename='images/logo-1.png') }}" alt="Logo" class="logo">
             <div>
                 <h1>Welcome to the DishWise</h1>
                 <p class="tagline">Smart Pricing for Every Plate</p>
@@ -22,7 +23,7 @@
     <div class="slider">
         <div class="slides">
             <div class="slide">
-                <img src="images/img-1.jpeg" alt="Image 1">
+                <img src="{{ url_for('static', filename='images/img-1.jpeg') }}" alt="Image 1">
                 <div class="text-overlay">
                     <h2>Your Journey to <span>Smart Pricing</span> Starts Here!</h2>
                     <p>Find the best prices for your favorite dishes and locate ingredients nearby.</p>
@@ -30,7 +31,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="images/img-2.jpeg" alt="Image 2">
+                <img src="{{ url_for('static', filename='images/img-2.jpeg') }}" alt="Image 2">
                 <div class="text-overlay">
                     <h2>Your Journey to <span>Smart Pricing</span> Starts Here!</h2>
                     <p>Find the best prices for your favorite dishes and locate ingredients nearby.</p>
@@ -38,7 +39,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="images/img-3.jpeg" alt="Image 3">
+                <img src="{{ url_for('static', filename='images/img-3.jpeg') }}" alt="Image 3">
                 <div class="text-overlay">
                     <h2>Your Journey to <span>Smart Pricing</span> Starts Here!</h2>
                     <p>Find the best prices for your favorite dishes and locate ingredients nearby.</p>
@@ -46,7 +47,7 @@
                 </div>
             </div>
             <div class="slide">
-                <img src="images/img-4.jpeg" alt="Image 4">
+                <img src="{{ url_for('static', filename='images/img-4.jpeg') }}" alt="Image 4">
                 <div class="text-overlay">
                     <h2>Your Journey to <span>Smart Pricing</span> Starts Here!</h2>
                     <p>Find the best prices for your favorite dishes and locate ingredients nearby.</p>
@@ -90,7 +91,7 @@
     <main>
         <section class="form-section">
             <h2>Estimate your dish’s cost & locate ingredients nearby</h2>
-            <form id="priceForm" onsubmit="submitForm(event)">
+            <form id="priceForm" onsubmit="submitForm(event)" action="/predict" method="POST">
                 <div class="input-group">
                     <label for="district">Current District</label>
                     <select id="district" name="district">
@@ -504,20 +505,15 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="amount">Amount</label>
-                    <input type="number" id="amount" name="amount" min="1" placeholder="Enter amount">
+                    <label for="variety">Enter the variety : </label>
+                    <input type="text" id="variety"  placeholder="Enter variety">
                 </div>
 
                 <div class="input-group">
-                    <label>Unit</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="unit" value="kg" checked> kg</label>
-                        <label><input type="radio" name="unit" value="g"> g</label>
-                        <label><input type="radio" name="unit" value="mg"> mg</label>
-                        <label><input type="radio" name="unit" value="quintal"> quintal</label>
-                        <label><input type="radio" name="unit" value="tonne"> tonne</label>
-                    </div>
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" name="amount" min="1" placeholder="Enter amount (in kg)">
                 </div>
+
 
                 <div class="input-group">
                     <label for="month">Enter the future month : </label>
@@ -533,42 +529,35 @@
             </form>
         </section>
 
+
         <section id="results-section" class="hidden">
             <h3>Prediction & Price Suggestions</h3>
-            
+        
             <!-- Predicted price card -->
             <div id="price-result" class="result-card">
                 <h4>Predicted Price</h4>
-                <p>Predicted price for Turmeric in Coimbatore for 10/2024: ₹3000.00 per quintal</p>
+                <p id="predicted-price">Predicted price will be shown here</p>
             </div>
-            
+        
             <!-- Location suggestion card -->
             <div id="location-result" class="result-card">
-                <h4>Nearby Districts for Turmeric</h4>
-                <p>Turmeric is available in the following districts near Coimbatore:</p>
-                <ul>
-                    <li>Erode (30.12 km), Variety: Finger, Modal Price: 2800.00 INR per quintal</li>
-                    <li>Karur (60.75 km), Variety: Bulb, Modal Price: 2900.00 INR per quintal</li>
-                    <li>Theni (100.23 km), Variety: Other, Modal Price: 2950.00 INR per quintal</li>
-                    <li>Namakkal (150.98 km), Variety: Finger, Modal Price: 2700.00 INR per quintal</li>
+                <h4>Nearby Districts for <span id="commodity-name"></span></h4>
+                <p>Available in the following nearby districts:</p>
+                <ul id="location-list">
+                    <!-- Location list dynamically populated here -->
                 </ul>
             </div>
         
             <!-- Price suggestions card -->
             <div id="suggestions-result" class="result-card">
-                <h4>Price Suggestions for 500 kg</h4>
-                <ul>
-                    <li>Erode: 1400.00 INR</li>
-                    <li>Karur: 1450.00 INR</li>
-                    <li>Theni: 1475.00 INR</li>
-                    <li>Namakkal: 1350.00 INR</li>
+                <h4>Price Suggestions for <span id="amount-display"></span></h4>
+                <ul id="price-suggestions-list">
+                    <!-- Price suggestions dynamically populated here -->
                 </ul>
             </div>
         </section>
         
     </main>
-
-    <script src="script.js"></script>
     <script>
         function scrollToForm() {
             document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
